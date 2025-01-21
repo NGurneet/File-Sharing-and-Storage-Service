@@ -2,6 +2,7 @@ import { request } from "express";
 import { extractUserId } from "../common/middleware/role-auth.middleware";
 import { File } from "./file.schema";
 import { uploadToCloudinary, deleteFromCloudinary } from "./file.util";
+import mongoose from "mongoose";
 
 /**
  * Upload a file to Cloudinary and store its details in the database.
@@ -10,23 +11,42 @@ import { uploadToCloudinary, deleteFromCloudinary } from "./file.util";
  * @param {string} folder - The folder in which the file will be stored on Cloudinary.
  * @returns {Promise<any>} The newly created file document containing details such as name, url, size, etc.
  */
-export const uploadFile = async (file: Express.Multer.File, folder: string) => {
-    console.log("User Id");
-    console.log(request.user?._id,);
+// export const uploadFile = async (file: Express.Multer.File, folder: string) => {
+//     console.log("User Id");
+//     console.log(request.user?._id,);
 
-    // Upload file to Cloudinary
-    const result = await uploadToCloudinary(file.path, folder);
+//     // Upload file to Cloudinary
+//     const result = await uploadToCloudinary(file.path, folder);
 
-    // Create a new file record in the database
-    const newFile = await File.create({
-        name: file.originalname,
-        url: result.secure_url,
-        size: file.size,
-        folder,
-        mimeType: file.mimetype,
-    });
+//     // Create a new file record in the database
+//     const newFile = await File.create({
+//         name: file.originalname,
+//         url: result.secure_url,
+//         size: file.size,
+//         folder,
+//         mimeType: file.mimetype,
+//     });
 
-    return newFile;
+//     return newFile;
+// };
+
+export const uploadFile = async (file: Express.Multer.File, folder: string, userId: string) => {
+  console.log("User Id:", userId);
+
+  // Upload file to Cloudinary
+  const result = await uploadToCloudinary(file.path, folder);
+
+  // Create a new file record in the database, linking it to the user
+  const newFile = await File.create({
+    name: file.originalname,
+    url: result.secure_url,  // The URL from Cloudinary after upload
+    size: file.size,
+    folder,
+    mimeType: file.mimetype,
+    uploadedBy: userId, // Link file to the user who uploaded it
+  });
+
+  return newFile;
 };
 
 /**
@@ -75,8 +95,9 @@ export const searchFiles = async (criteria: {
   };
 
   export const listFilesByUser = async (folder: string, userId: string) => {
-    return await File.find({ folder, userId });
-  };
+    return await File.find({ folder, uploadedBy: userId });
+};
+
 
 
 // import { request } from "express";

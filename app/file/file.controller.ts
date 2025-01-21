@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import * as fileService from "./file.service";
 import { NextFunction, Request, Response } from "express";
 import { createResponse } from "../common/helper/response.hepler";
+import mongoose from "mongoose";
 
 /**
  * Handles file upload request. 
@@ -11,17 +12,42 @@ import { createResponse } from "../common/helper/response.hepler";
  * @param {Response} res - The response object to send back the result of the file upload.
  * @returns {Promise<void>} A promise resolving when the file has been uploaded, or an error message if no file is provided.
  */
-export const uploadFile = asyncHandler( async (req: Request, res: Response): Promise<void> => {
+// export const uploadFile = asyncHandler( async (req: Request, res: Response): Promise<void> => {
+//   if (!req.file) {
+//     res.status(400).send(createResponse(null, "No file provided"));
+//     return;
+//   }
+
+//   const folder = req.body.folder || "default";
+//   const fileData = await fileService.uploadFile(req.file, folder);
+
+//   res.status(201).send(createResponse(fileData, "File uploaded successfully"));
+// });
+
+export const uploadFile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  // Check if file is present
   if (!req.file) {
-    res.status(400).send(createResponse(null, "No file provided"));
-    return;
+        res.status(400).send(createResponse(null, "No file provided"));
+        return;
+      }
+
+  // Ensure 'folder' field exists, defaulting to "default" if not provided
+  const folder = req.body.folder || "default";
+
+  // Check if 'userId' exists in request (assumes user is authenticated)
+  const userId = req.user?._id
+  if (!userId) {
+     res.status(400).send(createResponse(null, "User not authenticated"));
+     return;
   }
 
-  const folder = req.body.folder || "default";
-  const fileData = await fileService.uploadFile(req.file, folder);
+  // Prepare file data including userId (uploadedBy)
+  const fileData = await fileService.uploadFile(req.file, folder, userId );
 
+  // Respond with success
   res.status(201).send(createResponse(fileData, "File uploaded successfully"));
 });
+
 
 /**
  * Handles listing all files in the specified folder.
@@ -34,6 +60,15 @@ export const uploadFile = asyncHandler( async (req: Request, res: Response): Pro
 export const listFiles = asyncHandler(async (req: Request, res: Response) => {
   const folder = req.query.folder as string || "default";
   const files = await fileService.listFiles(folder);
+
+  res.status(200).send(createResponse(files, "Files retrieved successfully"));
+});
+
+export const listUserFiles = asyncHandler(async (req: Request, res: Response) => {
+  const folder = req.query.folder as string || "default";
+  const userId = req.user?._id; // Extracting the userId from the authenticated user
+
+  const files = await fileService.listFilesByUser(folder, userId as string);
 
   res.status(200).send(createResponse(files, "Files retrieved successfully"));
 });

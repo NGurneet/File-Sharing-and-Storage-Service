@@ -31,4 +31,5 @@ export interface IFile extends BaseSchema {
     //  * The user who uploaded the file.
     //  */
     // uploadedBy: mongoose.ObjectId;
+    uploadedBy: mongoose.Types.ObjectId;
 }

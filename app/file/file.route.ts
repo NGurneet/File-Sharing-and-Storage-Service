@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { uploadFile, listFiles, searchFiles } from "./file.controller";
+import { uploadFile, listUserFiles, searchFiles } from "./file.controller";
 import { roleAuth, extractUserId } from "../common/middleware/role-auth.middleware";
 import { compressFile } from "../common/middleware/file-middleware";
 import { validateSearchCriteria } from "../common/middleware/file-middleware";
@@ -42,7 +42,7 @@ router.post(
  * @param {Response} res - The response object to send back the list of files.
  * @returns {void} A response with a list of files, or a message indicating an empty folder.
  */
-router.get("/", extractUserId, listFiles);
+router.get("/", extractUserId, listUserFiles);
 
 /**
  * POST /search
