@@ -1,0 +1,16 @@
+{
+    "tags": {
+      "allowUnknownTags": true
+    },
+    "source": {
+      "include": ["app", "index.ts"],
+      "includePattern": ".+\\.ts$",   
+      "excludePattern": "(^|\\/|\\\\)node_modules" 
+    },
+    "opts": {
+      "destination": "./docs", 
+      "recurse": true,         
+      "template": "default"    
+    }
+  }
+  

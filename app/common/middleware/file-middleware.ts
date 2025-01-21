@@ -3,7 +3,7 @@ import sharp from "sharp"; // For image compression
 import fs from "fs";
 import path from "path";
 import { NextFunction, Request, Response } from "express";
-
+import Joi from "joi";
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -69,6 +69,25 @@ const upload = multer({
 
 
 // Middleware to handle file compression
+
+// Middleware to validate search criteria
+export const validateSearchCriteria = (req: Request, res: Response, next: NextFunction) => {
+  const schema = Joi.object({
+    name: Joi.string().optional(),
+    folder: Joi.string().optional(),
+    mimeType: Joi.string().optional(),
+    minSize: Joi.number().optional(),
+    maxSize: Joi.number().optional(),
+  });
+
+  const { error } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).send({ message: "Invalid search criteria", details: error.details });
+  }
+
+  next();
+};
 const compressFile = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.file) {
     return res.status(400).send({ message: "No file provided" });
@@ -103,40 +122,10 @@ const compressFile = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+
+
 export { compressFile };
 
 
 
 
-// import multer from "multer";
-// import path from "path";
-
-// // Configure storage options for file uploads
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "uploads/"); // Directory to save uploaded files
-//   },
-//   filename: (req, file, cb) => {
-//     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-//     cb(null, `${uniqueSuffix}-${file.originalname}`); // Ensure unique filenames
-//   },
-// });
-
-// // Define allowed file types
-// const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-//   const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-//   if (allowedTypes.includes(file.mimetype)) {
-//     cb(null, true); // Accept file
-//   } else {
-//     cb(new Error("Invalid file type. Only JPEG, PNG, and PDF are allowed.")); // Reject file
-//   }
-// };
-
-// // Set file size limit to 5MB and apply filter
-// const upload = multer({
-//   storage,
-//   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-//   fileFilter,
-// });
-
-// export default upload;
